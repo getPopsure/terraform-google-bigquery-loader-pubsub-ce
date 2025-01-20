@@ -225,7 +225,7 @@ variable "user_provided_id" {
 
 
 variable "create_service_account" {
-  description = "Creates a service account with all associated permissions"
+  description = "Creates a service account with all required permissions to access GCS and BigQuery"
   type        = bool
   default     = true
 }
