@@ -222,3 +222,16 @@ variable "user_provided_id" {
   type        = string
   default     = ""
 }
+
+
+variable "create_service_account" {
+  description = "Creates a service account with all associated permissions"
+  type        = bool
+  default     = true
+}
+
+variable "custom_service_account_email" {
+  description = "The email of the service account that will be used by the loader to access GCS and BigQuery"
+  type        = string
+  default     = ""
+}

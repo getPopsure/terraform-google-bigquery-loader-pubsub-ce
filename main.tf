@@ -41,59 +41,66 @@ module "telemetry" {
 # --- IAM: Service Account setup
 
 resource "google_service_account" "sa" {
+  count        = var.create_service_account ? 1 : 0
   account_id   = var.name
   display_name = "Snowplow BQ Loader service account - ${var.name}"
 }
 
 resource "google_project_iam_member" "sa_pubsub_viewer" {
+  count   = var.create_service_account ? 1 : 0
   project = var.project_id
   role    = "roles/pubsub.viewer"
-  member  = "serviceAccount:${google_service_account.sa.email}"
+  member  = var.create_service_account ? "serviceAccount:${google_service_account.sa[0].email}" : null
 }
 
 resource "google_project_iam_member" "sa_pubsub_subscriber" {
+  count   = var.create_service_account ? 1 : 0
   project = var.project_id
   role    = "roles/pubsub.subscriber"
-  member  = "serviceAccount:${google_service_account.sa.email}"
+  member  = var.create_service_account ? "serviceAccount:${google_service_account.sa[0].email}" : null
 }
 
 resource "google_project_iam_member" "sa_pubsub_publisher" {
+  count   = var.create_service_account ? 1 : 0
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:${google_service_account.sa.email}"
+  member  = var.create_service_account ? "serviceAccount:${google_service_account.sa[0].email}" : null
 }
 
 resource "google_project_iam_member" "sa_logging_log_writer" {
+  count   = var.create_service_account ? 1 : 0
   project = var.project_id
   role    = "roles/logging.logWriter"
-  member  = "serviceAccount:${google_service_account.sa.email}"
+  member  = var.create_service_account ? "serviceAccount:${google_service_account.sa[0].email}" : null
 }
 
 resource "google_project_iam_member" "sa_bigquery_data_editor" {
+  count   = var.create_service_account ? 1 : 0
   project = var.project_id
   role    = "roles/bigquery.dataEditor"
-  member  = "serviceAccount:${google_service_account.sa.email}"
+  member  = var.create_service_account ? "serviceAccount:${google_service_account.sa[0].email}" : null
 }
 
 resource "google_project_iam_member" "sa_storage_object_viewer" {
+  count   = var.create_service_account ? 1 : 0
   project = var.project_id
   role    = "roles/storage.objectViewer"
-  member  = "serviceAccount:${google_service_account.sa.email}"
+  member  = var.create_service_account ? "serviceAccount:${google_service_account.sa[0].email}" : null
 }
 
-resource "google_storage_bucket_iam_binding" "dead_letter_storage_object_admin_binding" {
+resource "google_storage_bucket_iam_member" "dead_letter_storage_object_admin_binding" {
+  count  = var.create_service_account ? 1 : 0
   bucket = var.gcs_dead_letter_bucket_name
   role   = "roles/storage.objectAdmin"
-  members = [
-    "serviceAccount:${google_service_account.sa.email}"
-  ]
+  member = var.create_service_account ? "serviceAccount:${google_service_account.sa[0].email}" : null
 }
 
 resource "google_bigquery_dataset_iam_member" "dataset_bigquery_data_editor_binding" {
+  count      = var.create_service_account ? 1 : 0
   project    = var.project_id
   dataset_id = var.bigquery_dataset_id
   role       = "roles/bigquery.dataEditor"
-  member     = "serviceAccount:${google_service_account.sa.email}"
+  member     = var.create_service_account ? "serviceAccount:${google_service_account.sa[0].email}" : null
 }
 
 # --- CE: Firewall rules
@@ -329,6 +336,6 @@ module "service" {
   target_size                 = each.value.target_size
   ssh_block_project_keys      = var.ssh_block_project_keys
   ssh_key_pairs               = var.ssh_key_pairs
-  service_account_email       = google_service_account.sa.email
+  service_account_email       = var.create_service_account ? google_service_account.sa[0].email : var.custom_service_account_email
   associate_public_ip_address = var.associate_public_ip_address
 }
